@@ -1,0 +1,48 @@
+/* frontend/src/assets/VehicleList.css */
+
+/* 容器样式 */
+.vehicle-list-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 16px;
+  background: #f8f9fa;
+}
+
+/* 头部区域 */
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.title {
+  font-size: 1.8rem;
+  color: #52b0cc;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* 表格全局样式 */
+.data-table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: white;
+  margin-top: 20px;
+}
+
+/* 移动端适配 */
+@media (max-width: 960px) {
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+}

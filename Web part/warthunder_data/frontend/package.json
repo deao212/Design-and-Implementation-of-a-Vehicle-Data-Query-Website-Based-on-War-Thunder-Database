@@ -1,0 +1,26 @@
+{
+  "name": "warthunder_data",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@mdi/js": "^7.4.47",
+    "axios": "^1.8.1",
+    "sass": "^1.86.0",
+    "vite-plugin-vuetify": "^2.1.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.5.0",
+    "vuetify": "^3.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.2.0",
+    "vite-plugin-vue-devtools": "^7.7.2"
+  }
+}

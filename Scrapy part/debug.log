@@ -1,0 +1,574 @@
+2025-03-14 17:48:18 [scrapy.utils.log] INFO: Scrapy 2.12.0 started (bot: warthunder)
+2025-03-14 17:48:18 [scrapy.utils.log] INFO: Versions: lxml 5.3.0.0, libxml2 2.11.7, cssselect 1.2.0, parsel 1.9.1, w3lib 2.2.1, Twisted 24.11.0, Python 3.10.16 | packaged by Anaconda, Inc. | (main, Dec 11 2024, 16:19:12) [MSC v.1929 64 bit (AMD64)], pyOpenSSL 24.3.0 (OpenSSL 3.4.0 22 Oct 2024), cryptography 44.0.0, Platform Windows-10-10.0.22631-SP0
+2025-03-14 17:48:19 [scrapy.addons] INFO: Enabled addons:
+[]
+2025-03-14 17:48:19 [scrapy.extensions.telnet] INFO: Telnet Password: 56a007e77957a89b
+2025-03-14 17:48:19 [scrapy.middleware] INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.logstats.LogStats']
+2025-03-14 17:48:19 [scrapy.crawler] INFO: Overridden settings:
+{'BOT_NAME': 'warthunder',
+ 'DOWNLOAD_DELAY': 3,
+ 'FEED_EXPORT_ENCODING': 'utf-8',
+ 'LOG_FILE': 'debug.log',
+ 'LOG_LEVEL': 'INFO',
+ 'NEWSPIDER_MODULE': 'warthunder.spiders',
+ 'ROBOTSTXT_OBEY': True,
+ 'SPIDER_MODULES': ['warthunder.spiders'],
+ 'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'}
+2025-03-14 17:48:19 [scrapy.middleware] INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.RedirectMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats']
+2025-03-14 17:48:19 [scrapy.middleware] INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+2025-03-14 17:48:19 [scrapy.middleware] INFO: Enabled item pipelines:
+['warthunder.pipelines.WarthunderPipeline']
+2025-03-14 17:48:19 [scrapy.core.engine] INFO: Spider opened
+2025-03-14 17:48:19 [scrapy.extensions.logstats] INFO: Crawled 0 pages (at 0 pages/min), scraped 0 items (at 0 items/min)
+2025-03-14 17:48:19 [scrapy.extensions.telnet] INFO: Telnet console listening on 127.0.0.1:6023
+2025-03-14 17:48:29 [vehicles] INFO: 🔍 调试模式 - 处理分类: aviation
+2025-03-14 17:48:35 [vehicles] INFO: 🏳️ 发现 10 个有效国家
+2025-03-14 17:48:36 [vehicles] INFO: 🌐 正在处理国家 [1/10]: USA
+2025-03-14 17:48:51 [vehicles] ERROR: ❌ 国家 USA 处理失败: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:49:17 [vehicles] ERROR: ⌛️ 页面加载超时: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:49:17 [vehicles] INFO: 🔍 调试模式 - 处理分类: ground
+2025-03-14 17:49:22 [vehicles] INFO: 🏳️ 发现 10 个有效国家
+2025-03-14 17:49:22 [vehicles] INFO: 🌐 正在处理国家 [1/10]: USA
+2025-03-14 17:49:38 [vehicles] ERROR: ❌ 国家 USA 处理失败: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:49:39 [vehicles] ERROR: 💥 未处理异常: ('Connection aborted.', ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None))
+2025-03-14 17:49:39 [scrapy.extensions.logstats] INFO: Crawled 3 pages (at 3 pages/min), scraped 0 items (at 0 items/min)
+2025-03-14 17:55:17 [scrapy.utils.log] INFO: Scrapy 2.12.0 started (bot: warthunder)
+2025-03-14 17:55:17 [scrapy.utils.log] INFO: Versions: lxml 5.3.0.0, libxml2 2.11.7, cssselect 1.2.0, parsel 1.9.1, w3lib 2.2.1, Twisted 24.11.0, Python 3.10.16 | packaged by Anaconda, Inc. | (main, Dec 11 2024, 16:19:12) [MSC v.1929 64 bit (AMD64)], pyOpenSSL 24.3.0 (OpenSSL 3.4.0 22 Oct 2024), cryptography 44.0.0, Platform Windows-10-10.0.22631-SP0
+2025-03-14 17:55:18 [scrapy.addons] INFO: Enabled addons:
+[]
+2025-03-14 17:55:18 [scrapy.extensions.telnet] INFO: Telnet Password: 4abd6959f66df4e3
+2025-03-14 17:55:18 [scrapy.middleware] INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.logstats.LogStats']
+2025-03-14 17:55:18 [scrapy.crawler] INFO: Overridden settings:
+{'BOT_NAME': 'warthunder',
+ 'DOWNLOAD_DELAY': 3,
+ 'FEED_EXPORT_ENCODING': 'utf-8',
+ 'LOG_FILE': 'debug.log',
+ 'LOG_LEVEL': 'INFO',
+ 'NEWSPIDER_MODULE': 'warthunder.spiders',
+ 'ROBOTSTXT_OBEY': True,
+ 'SPIDER_MODULES': ['warthunder.spiders'],
+ 'TWISTED_REACTOR': 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'}
+2025-03-14 17:55:19 [scrapy.middleware] INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.RedirectMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats']
+2025-03-14 17:55:19 [scrapy.middleware] INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+2025-03-14 17:55:19 [scrapy.middleware] INFO: Enabled item pipelines:
+['warthunder.pipelines.WarthunderPipeline']
+2025-03-14 17:55:19 [scrapy.core.engine] INFO: Spider opened
+2025-03-14 17:55:19 [scrapy.extensions.logstats] INFO: Crawled 0 pages (at 0 pages/min), scraped 0 items (at 0 items/min)
+2025-03-14 17:55:19 [scrapy.extensions.telnet] INFO: Telnet console listening on 127.0.0.1:6023
+2025-03-14 17:55:28 [vehicles] INFO: 开始处理分类: aviation
+2025-03-14 17:55:35 [vehicles] INFO: ✅ 已成功处理Cookie弹窗
+2025-03-14 17:55:35 [vehicles] INFO: 🌍 发现 10 个有效国家
+2025-03-14 17:55:35 [vehicles] INFO: 🔧 正在处理国家 [1/10]: USA
+2025-03-14 17:55:51 [vehicles] ERROR: ⛔ 处理国家 USA 时出错: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:56:17 [vehicles] ERROR: ⏳ 页面加载超时: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:56:19 [vehicles] INFO: 开始处理分类: helicopters
+2025-03-14 17:56:36 [vehicles] WARNING: ⚠️ 未检测到Cookie弹窗，可能已自动接受
+2025-03-14 17:56:36 [vehicles] INFO: 🌍 发现 10 个有效国家
+2025-03-14 17:56:36 [vehicles] INFO: 🔧 正在处理国家 [1/10]: USA
+2025-03-14 17:56:51 [vehicles] ERROR: ⛔ 处理国家 USA 时出错: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:57:13 [vehicles] ERROR: ⏳ 页面加载超时: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:57:13 [scrapy.extensions.logstats] INFO: Crawled 3 pages (at 3 pages/min), scraped 0 items (at 0 items/min)
+2025-03-14 17:57:13 [vehicles] INFO: 开始处理分类: ground
+2025-03-14 17:57:33 [vehicles] WARNING: ⚠️ 未检测到Cookie弹窗，可能已自动接受
+2025-03-14 17:57:33 [vehicles] INFO: 🌍 发现 10 个有效国家
+2025-03-14 17:57:33 [vehicles] INFO: 🔧 正在处理国家 [1/10]: USA
+2025-03-14 17:57:48 [vehicles] ERROR: ⛔ 处理国家 USA 时出错: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:58:13 [vehicles] ERROR: ⏳ 页面加载超时: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:58:13 [scrapy.extensions.logstats] INFO: Crawled 4 pages (at 1 pages/min), scraped 0 items (at 0 items/min)
+2025-03-14 17:58:14 [vehicles] INFO: 开始处理分类: aviation
+2025-03-14 17:58:35 [vehicles] WARNING: ⚠️ 未检测到Cookie弹窗，可能已自动接受
+2025-03-14 17:58:35 [vehicles] INFO: 🌍 发现 10 个有效国家
+2025-03-14 17:58:35 [vehicles] INFO: 🔧 正在处理国家 [1/10]: USA
+2025-03-14 17:58:51 [vehicles] ERROR: ⛔ 处理国家 USA 时出错: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:59:17 [vehicles] ERROR: ⏳ 页面加载超时: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 17:59:17 [scrapy.extensions.logstats] INFO: Crawled 5 pages (at 1 pages/min), scraped 0 items (at 0 items/min)
+2025-03-14 17:59:17 [vehicles] INFO: 开始处理分类: helicopters
+2025-03-14 17:59:34 [vehicles] WARNING: ⚠️ 未检测到Cookie弹窗，可能已自动接受
+2025-03-14 17:59:34 [vehicles] INFO: 🌍 发现 10 个有效国家
+2025-03-14 17:59:34 [vehicles] INFO: 🔧 正在处理国家 [1/10]: USA
+2025-03-14 17:59:49 [vehicles] ERROR: ⛔ 处理国家 USA 时出错: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 18:00:11 [vehicles] ERROR: ⏳ 页面加载超时: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 18:00:11 [scrapy.extensions.logstats] INFO: Crawled 6 pages (at 1 pages/min), scraped 0 items (at 0 items/min)
+2025-03-14 18:00:12 [vehicles] INFO: 开始处理分类: ground
+2025-03-14 18:00:32 [vehicles] WARNING: ⚠️ 未检测到Cookie弹窗，可能已自动接受
+2025-03-14 18:00:32 [vehicles] INFO: 🌍 发现 10 个有效国家
+2025-03-14 18:00:32 [vehicles] INFO: 🔧 正在处理国家 [1/10]: USA
+2025-03-14 18:00:48 [vehicles] ERROR: ⛔ 处理国家 USA 时出错: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 18:01:13 [vehicles] ERROR: ⏳ 页面加载超时: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 18:01:13 [scrapy.extensions.logstats] INFO: Crawled 7 pages (at 1 pages/min), scraped 0 items (at 0 items/min)
+2025-03-14 18:01:14 [vehicles] INFO: 开始处理分类: helicopters
+2025-03-14 18:01:31 [vehicles] WARNING: ⚠️ 未检测到Cookie弹窗，可能已自动接受
+2025-03-14 18:01:31 [vehicles] INFO: 🌍 发现 10 个有效国家
+2025-03-14 18:01:31 [vehicles] INFO: 🔧 正在处理国家 [1/10]: USA
+2025-03-14 18:01:47 [vehicles] ERROR: ⛔ 处理国家 USA 时出错: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 18:02:09 [vehicles] ERROR: ⏳ 页面加载超时: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF60EA3E6D5+13397]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60ECCB174+2060308]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF60EC222D8+1368440]
+	(No symbol) [0x00007FF60E813219]
+	(No symbol) [0x00007FF60E81340B]
+	(No symbol) [0x00007FF60E854057]
+	(No symbol) [0x00007FF60E83420F]
+	(No symbol) [0x00007FF60E8095BD]
+	(No symbol) [0x00007FF60E851B70]
+	(No symbol) [0x00007FF60E833F33]
+	(No symbol) [0x00007FF60E808B06]
+	(No symbol) [0x00007FF60E807DC0]
+	(No symbol) [0x00007FF60E808933]
+	(No symbol) [0x00007FF60E890184]
+	(No symbol) [0x00007FF60E92063F]
+	(No symbol) [0x00007FF60E8939C3]
+	Microsoft::Applications::Events::EventProperty::to_string [0x00007FF60ED8457D+279981]
+	simdutf::get_active_implementation [0x00007FF60E9C77D1+409489]
+	simdutf::get_active_implementation [0x00007FF60E9C2AB4+389748]
+	simdutf::get_active_implementation [0x00007FF60E9C2BF9+390073]
+	simdutf::get_active_implementation [0x00007FF60E9B61F6+338358]
+	BaseThreadInitThunk [0x00007FFAB703259D+29]
+	RtlUserThreadStart [0x00007FFAB86EAF38+40]
+
+2025-03-14 18:02:09 [scrapy.extensions.logstats] INFO: Crawled 8 pages (at 1 pages/min), scraped 0 items (at 0 items/min)
+2025-03-14 18:02:09 [vehicles] INFO: 开始处理分类: aviation
+2025-03-14 18:02:30 [vehicles] WARNING: ⚠️ 未检测到Cookie弹窗，可能已自动接受
+2025-03-14 18:02:30 [vehicles] INFO: 🌍 发现 10 个有效国家
+2025-03-14 18:02:30 [vehicles] INFO: 🔧 正在处理国家 [1/10]: USA
