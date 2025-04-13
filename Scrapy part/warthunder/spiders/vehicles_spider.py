@@ -83,7 +83,7 @@ class VehiclesSpider(scrapy.Spider):
                     self.logger.info(f" find {len(vehicle_links)} vehicle link")
 
                     # Handle each vehicle link
-                    for link in vehicle_links[:1]:  # Limit the number when testing
+                    for link in vehicle_links:  # Limit the number when testing
                         vehicle_url = link.get_attribute('href')
                         if vehicle_url:
                             self.logger.debug(f" Extract to link: {vehicle_url}")
