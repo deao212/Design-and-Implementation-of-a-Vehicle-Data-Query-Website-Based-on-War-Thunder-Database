@@ -48,6 +48,12 @@ class WarthunderPipeline:
             self.conn.close()
 
     def process_item(self, item, spider):
+        # 从 item 中安全取出并删除 'category' 字段
+        category = item.pop('category', None)
+        if not category:
+            spider.logger.error("Category not found in item")
+            return item
+
         """处理每一个爬取到的 item"""
         table_name = ''
         if item['category'] == 'aviation':

@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.service import Service
+from selenium.webdriver.edge.options import Options as EdgeOptions
 import scrapy
 import mysql.connector
 import re
@@ -21,10 +22,17 @@ class VehiclesSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super(VehiclesSpider, self).__init__(*args, **kwargs)
-
+        edge_options = EdgeOptions()
+        edge_options.add_argument("--disable-blink-features=AutomationControlled")
+        edge_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        prefs = {
+            "profile.managed_default_content_settings.images": 2,  # 禁用图片
+            "profile.managed_default_content_settings.stylesheet": 2  # 禁用 CSS
+        }
+        edge_options.add_experimental_option("prefs", prefs)
         #  Set the Edge WebDriver path
         service = Service(executable_path='C:/Program Files/edgedriver_win64/msedgedriver.exe')
-        self.driver = webdriver.Edge(service=service)  # Start WebDriver with Service
+        self.driver = webdriver.Edge(service=service, options=edge_options)  # Start WebDriver with Service
 
         # Create a database connection
         self.db = mysql.connector.connect(
@@ -110,428 +118,497 @@ class VehiclesSpider(scrapy.Spider):
 
         category = response.meta['category']  # Get vehicle categories (aviation, ground, helicopters)
         self.logger.info(f"Parsing vehicle details in category {category}: {response.url}")
-
+        # 使用 Selenium 加载页面（确保动态内容渲染）
+        self.driver.get(response.url)
         item = WarThunderItem()
 
-        def clean_text(text):
-            # Use regular expressions to remove all non-print characters (including control characters)
-            if text:
-                return re.sub(r'[^\x20-\x7E]+', '', text)  # Keep only printable characters
-            return text
+        # 显式等待核心容器加载（所有页面通用）
+        try:
+            WebDriverWait(self.driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.game-unit_name"))
+            )
+        except TimeoutException:
+            self.logger.error(f"核心容器未加载: {response.url}")
+            self.driver.save_screenshot("core_container_timeout.png")
+            return item
+
+        def clean_text(text, is_numeric=False):
+            if not text:
+                return 'Unknown' if not is_numeric else '0'
+
+            # 保留数字、小数点和单位（如 "5.7 km/h" → "5.7"）
+            if is_numeric:
+                cleaned = re.sub(r'[^\d.]', '', text)
+                return cleaned if cleaned else '0'
+
+            # 移除控制字符但保留可见符号
+            return re.sub(r'[\x00-\x1F\x7F-\x9F]', '', text).strip()
+
+        def safe_find_text(xpath, is_numeric=False, default='Unknown'):
+            try:
+                element = self.driver.find_element(By.XPATH, xpath)
+                return clean_text(element.text, is_numeric=is_numeric)
+            except NoSuchElementException:
+                return default
+
         item['category'] = category
         # Extract basic vehicle information and add default values to avoid errors
-        item['name'] = clean_text(response.css('div.game-unit_name::text').get().strip() if response.css(
-            'div.game-unit_name::text').get() else 'Unknown')
+        item['name'] = clean_text(
+            self.driver.find_element(By.XPATH, '//div[contains(@class, "game-unit_name")]')
+            .text.strip() or 'Unknown'
+        )
 
-        item['nation'] = clean_text(response.css(
-            'div.game-unit_card-info_item:contains("Game nation") div.game-unit_card-info_value div.text-truncate::text').get() or 'Unknown')
+        item['nation'] = clean_text(
+            self.driver.find_element(
+                By.XPATH,
+                '//div[@class="game-unit_card-info_title" and text()="Game nation"]/../div[@class="game-unit_card-info_value"]/div[@class="text-truncate"]')
+            .text.strip() or 'Unknown'
+        )
 
-        item['rank'] = clean_text(response.css(
-            'div.game-unit_card-info_item.game-unit_rank div.game-unit_card-info_value::text').get().strip() if response.css(
-            'div.game-unit_card-info_item.game-unit_rank div.game-unit_card-info_value::text').get() else 'Unknown')
+        item['rank'] = clean_text(
+            self.driver.find_element(By.XPATH,
+                 '//div[contains(@class, "game-unit_card-info_item") and contains(@class, "game-unit_rank")]//div[contains(@class, "game-unit_card-info_value")]')
+            .text.strip() or 'Unknown'
+        )
 
-        item['main_role'] = clean_text(response.xpath(
-            '//div[contains(@class, "game-unit_card-info_title") and contains(text(), "Main role")]/preceding-sibling::div[contains(@class, "game-unit_card-info_value")]//div[contains(@class, "text-truncate")]/text()'
-        ).get() or 'Unknown')
+        item['main_role'] = clean_text(
+            self.driver.find_element(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_card-info_title") and contains(text(), "Main role")]/../div[contains(@class, "game-unit_card-info_value")]//div[contains(@class, "text-truncate")]'
+            ).text.strip() or 'Unknown'
+        )
 
-        item['AB'] = clean_text(response.css(
-            'div.game-unit_br-item .mode:contains("AB") + .value::text').get().strip() if response.css(
-            'div.game-unit_br-item .mode:contains("AB") + .value::text').get() else 'Unknown')
+        # AB 字段
+        item['AB'] = clean_text(
+            self.driver.find_element(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_br-item")]//*[contains(@class, "mode") and contains(text(), "AB")]/following-sibling::*[contains(@class, "value")][1]'
+            ).text.strip() if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_br-item")]//*[contains(@class, "mode") and contains(text(), "AB")]/following-sibling::*[contains(@class, "value")][1]'
+            ) else 'Unknown'
+        )
 
-        item['RB'] = clean_text(response.css(
-            'div.game-unit_br-item .mode:contains("RB") + .value::text').get().strip() if response.css(
-            'div.game-unit_br-item .mode:contains("RB") + .value::text').get() else 'Unknown')
+        # RB 字段
+        item['RB'] = clean_text(
+            self.driver.find_element(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_br-item")]//*[contains(@class, "mode") and contains(text(), "RB")]/following-sibling::*[contains(@class, "value")][1]'
+            ).text.strip() if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_br-item")]//*[contains(@class, "mode") and contains(text(), "RB")]/following-sibling::*[contains(@class, "value")][1]'
+            ) else 'Unknown'
+        )
 
-        item['SB'] = clean_text(response.css(
-            'div.game-unit_br-item .mode:contains("SB") + .value::text').get().strip() if response.css(
-            'div.game-unit_br-item .mode:contains("SB") + .value::text').get() else 'Unknown')
+        # SB 字段
+        item['SB'] = clean_text(
+            self.driver.find_element(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_br-item")]//*[contains(@class, "mode") and contains(text(), "SB")]/following-sibling::*[contains(@class, "value")][1]'
+            ).text.strip() if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_br-item")]//*[contains(@class, "mode") and contains(text(), "SB")]/following-sibling::*[contains(@class, "value")][1]'
+            ) else 'Unknown'
+        )
 
-        # Gets the number in the previous sibling element of Research
-        item['research'] = clean_text(response.xpath(
-            '//div[contains(@class, "game-unit_card-info_title") and text()="Research"]/preceding-sibling::div[contains(@class, "game-unit_card-info_value")]//div/text()'
-        ).get().strip() if response.xpath(
-            '//div[contains(@class, "game-unit_card-info_title") and text()="Research"]/preceding-sibling::div[contains(@class, "game-unit_card-info_value")]//div/text()'
-        ).get() else '0')
+        # Research 字段
+        item['research'] = clean_text(
+            self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_card-info_title") and normalize-space(text())="Research"]/preceding-sibling::div[contains(@class, "game-unit_card-info_value")]//div'
+            )[0].text.strip() if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_card-info_title") and normalize-space(text())="Research"]/preceding-sibling::div[contains(@class, "game-unit_card-info_value")]//div'
+            ) else '0'
+        )
 
-        # Read the Purchase field and make sure to get the adjacent value
-        item['purchase'] = clean_text(response.xpath(
-            '//div[contains(@class, "game-unit_card-info_title") and text()="Purchase"]/preceding-sibling::div[contains(@class, "game-unit_card-info_value")]//div/text()'
-        ).get().strip() if response.xpath(
-            '//div[contains(@class, "game-unit_card-info_title") and text()="Purchase"]/preceding-sibling::div[contains(@class, "game-unit_card-info_value")]//div/text()'
-        ).get() else '0')
+        # Purchase 字段
+        item['purchase'] = clean_text(
+            self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_card-info_title") and normalize-space(text())="Purchase"]/preceding-sibling::div[contains(@class, "game-unit_card-info_value")]//div'
+            )[0].text.strip() if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_card-info_title") and normalize-space(text())="Purchase"]/preceding-sibling::div[contains(@class, "game-unit_card-info_value")]//div'
+            ) else '0'
+        )
 
         # Extract different data based on the page type
         if category == 'aviation':
             # Extract detailed data for aviation (aircraft) vehicles
-            # max_speed
-            item['max_speed'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]/text()'
-            ).get() else 'Unknown')
+            # Max speed 字段
+            item['max_speed'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
+            ) else 'Unknown'
 
-            # at_height
-            item['at_height'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[1]//span[1]/text()'
-            ).get().strip().replace(',', '') if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[1]//span[1]/text()'
-            ).get() else 'Unknown')
+            # at_height 字段（优化了位置索引）
+            item['at_height'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[1]/span[1]'
+                )[0].text.strip().replace(',', '')
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[1]/span[1]'
+            ) else 'Unknown'
 
-            # Rate of Climb
-            item['rate_of_climb'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Rate of Climb")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Rate of Climb")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]/text()'
-            ).get() else 'Unknown')
+            # Rate of Climb 字段
+            item['rate_of_climb'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Rate of Climb")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Rate of Climb")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
+            ) else 'Unknown'
 
-            # Turn time
-            item['turn_time'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Turn time")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Turn time")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]/text()'
-            ).get() else 'Unknown')
+            # Turn time 字段
+            item['turn_time'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Turn time")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Turn time")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
+            ) else 'Unknown'
 
-            # Max altitude
-            item['max_altitude'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max altitude")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max altitude")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            # Max altitude 字段
+            item['max_altitude'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Max altitude")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max altitude")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
-            # Takeoff Run
-            item['takeoff_run'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Takeoff Run")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Takeoff Run")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            # Takeoff Run 字段
+            item['takeoff_run'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Takeoff Run")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Takeoff Run")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
-            # Crew
-            item['crew'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Crew")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Crew")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            # Crew 字段
+            item['crew'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Crew")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Crew")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
-            # Length
-            item['length'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Length")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Length")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            # Length 字段
+            item['length'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Length")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Length")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
-            # Gross weight
-            item['gross_weight'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Gross weight")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Gross weight")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            # Gross weight 字段
+            item['gross_weight'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Gross weight")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Gross weight")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
-            # Wingspan
-            item['wingspan'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Wingspan")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Wingspan")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            # Wingspan 字段
+            item['wingspan'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Wingspan")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Wingspan")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
-            # Engine
-            item['engine'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Engine")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Engine")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            # Engine 字段
+            item['engine'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Engine")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Engine")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
-            # Max Speed Limit (IAS)
-            item['max_speed_limit_ias'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max Speed Limit (IAS)")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip().split(' ')[0] if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max Speed Limit (IAS)")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            # Max Speed Limit (IAS) 字段（带 split 处理）
+            item['max_speed_limit_ias'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Max Speed Limit (IAS)")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip().split(' ')[0]
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max Speed Limit (IAS)")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
-            # Flap Speed Limit (IAS)
-            item['flap_speed_limit_ias'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Flap Speed Limit (IAS)")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip().split(' ')[0] if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Flap Speed Limit (IAS)")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            # Flap Speed Limit (IAS) 字段（带 split 处理）
+            item['flap_speed_limit_ias'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Flap Speed Limit (IAS)")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip().split(' ')[0]
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Flap Speed Limit (IAS)")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
-            # Mach Number Limit
-            item['mach_number_limit'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Mach Number Limit")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip().split(' ')[0] if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Mach Number Limit")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            # Mach Number Limit 字段（带 split 处理）
+            item['mach_number_limit'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Mach Number Limit")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip().split(' ')[0]
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Mach Number Limit")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
         elif category == 'ground':
 
-            armour_hull = None
+            # Armour - Hull
+            item['armor_hull'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Hull")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Hull")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+            ) else 'Unknown'
 
-            armour_turret = None
-
-            visibility = None
-
-            crew = None
-
-            max_speed_forward = None
-
-            max_speed_backward = None
-
-            power_to_weight_ratio = None
-
-            engine_power = None
-
-            weight = None
-
-            optics_gunner_zoom = None
-
-            optics_commander_zoom = None
-
-            optics_driver_zoom = None
-
-            optics_gunner_device = None
-
-            optics_commander_device = None
-
-            optics_driver_device = None
-
-            # Hull
-
-            hull_data = response.xpath(
-
-                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Hull")]/following-sibling::span[contains(@class, "game-unit_chars-value")]/text()').get()
-
-            if hull_data:
-                armour_hull = clean_text(hull_data.strip())
-
-            # Turret
-
-            turret_data = response.xpath(
-
-                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Turret")]/following-sibling::span[contains(@class, "game-unit_chars-value")]/text()').get()
-
-            if turret_data:
-                armour_turret = clean_text(turret_data.strip())
+            # Armour - Turret
+            item['armor_turret'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Turret")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Turret")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+            ) else 'Unknown'
 
             # Visibility
+            item['visibility'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Visibility")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Visibility")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+            ) else 'Unknown'
+
+            # Crew (坦克乘员)
+            item['crew'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Crew")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Crew")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+            ) else 'Unknown'
+
+            # Max speed forward (带单位分割)
+            item['max_speed_forward'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Forward")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb")]'
+                )[0].text.strip().split()[0]
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Forward")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb")]'
+            ) else 'Unknown'
+
+            # Max speed backward (带单位分割)
+            item['max_speed_backward'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Backward")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span'
+                )[0].text.strip().split()[0]
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Backward")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span'
+            ) else 'Unknown'
+
+            # Power-to-weight ratio (带千分位处理)
+            item['power_to_weight_ratio'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Power-to-weight ratio")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb-mod-ref")]'
+                )[0].text.strip().replace(',', '')
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Power-to-weight ratio")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb-mod-ref")]'
+            ) else 'Unknown'
+
+            # Engine power (带千分位处理)
+            item['engine_power'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Engine power")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb-mod-ref")]'
+                )[0].text.strip().replace(',', '')
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Engine power")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb-mod-ref")]'
+            ) else 'Unknown'
+
+            # Weight (带千分位处理)
+            item['weight'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Weight")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+                )[0].text.strip().replace(',', '')
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Weight")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+            ) else 'Unknown'
+
+            # 光学参数统一模板
+            def get_optics_field(path_suffix: str, index: int, processor=None):
+                elements = self.driver.find_elements(
+                    By.XPATH,
+                    f'//div[contains(@class, "form-text mb-1") and contains(text(), "{path_suffix}")]/following-sibling::div[contains(@class, "gunit_specs-table_row")]/div[{index}]'
+                )
+                if not elements:
+                    return 'Unknown'
+                text = elements[0].text.strip()
+                return clean_text(processor(text)) if processor else clean_text(text)
+
+            # 光学倍率
+            item['optics_gunner_zoom'] = get_optics_field("Optics zoom", 1)
+            item['optics_commander_zoom'] = get_optics_field("Optics zoom", 2)
+            item['optics_driver_zoom'] = get_optics_field("Optics zoom", 3)
+
+            # 光学设备
+            item['optics_gunner_device'] = get_optics_field("Optical device", 1, lambda x: x.split('\n')[0])
+            item['optics_commander_device'] = get_optics_field("Optical device", 2, lambda x: x.split('\n')[0])
+            item['optics_driver_device'] = get_optics_field("Optical device", 3, lambda x: x.split('\n')[0])
 
-            visibility_data = response.xpath(
 
-                '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Visibility")]/following-sibling::span[contains(@class, "game-unit_chars-value")]/text()').get()
-
-            if visibility_data:
-                visibility = clean_text(visibility_data.strip())
-
-            # Crew
-
-            crew_data = response.xpath(
-
-                '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Crew")]/following-sibling::span[contains(@class, "game-unit_chars-value")]/text()').get()
-
-            if crew_data:
-                crew = clean_text(crew_data.strip())
-
-            # Max speed forward
-
-            max_speed_forward_data = response.xpath(
-
-                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Forward")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb")]/text()').get()
-
-            if max_speed_forward_data:
-                max_speed_forward = clean_text(max_speed_forward_data.strip())
-
-            # Max speed backward
-
-            max_speed_backward_data = response.xpath(
-
-                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Backward")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span/text()').get()
-
-            if max_speed_backward_data:
-                max_speed_backward = clean_text(max_speed_backward_data.strip())
-
-            # Power-to-weight ratio
-
-            power_to_weight_ratio_data = response.xpath(
-
-                '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Power-to-weight ratio")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb-mod-ref")]/text()').get()
-
-            if power_to_weight_ratio_data:
-                power_to_weight_ratio = clean_text(power_to_weight_ratio_data.strip())
-
-            # Engine power
-
-            engine_power_data = response.xpath(
-
-                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Engine power")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb-mod-ref")]/text()').get()
-
-            if engine_power_data:
-                engine_power = clean_text(engine_power_data.strip())
-
-            # Weight
-
-            weight_data = response.xpath(
-
-                '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Weight")]/following-sibling::span[contains(@class, "game-unit_chars-value")]/text()').get()
-
-            if weight_data:
-                weight = clean_text(weight_data.strip())
-
-            #   Optics zoom for Gunner、Commander and Driver
-
-            optics_zoom_data = response.xpath(
-
-                '//div[contains(@class, "form-text mb-1") and contains(text(), "Optics zoom")]/following-sibling::div[contains(@class, "gunit_specs-table_row")]/div[1]/text()').get()
-
-            if optics_zoom_data:
-                optics_gunner_zoom = clean_text(optics_zoom_data.strip())
-
-            optics_zoom_data = response.xpath(
-
-                '//div[contains(@class, "form-text mb-1") and contains(text(), "Optics zoom")]/following-sibling::div[contains(@class, "gunit_specs-table_row")]/div[2]/text()').get()
-
-            if optics_zoom_data:
-                optics_commander_zoom = clean_text(optics_zoom_data.strip())
-
-            optics_zoom_data = response.xpath(
-
-                '//div[contains(@class, "form-text mb-1") and contains(text(), "Optics zoom")]/following-sibling::div[contains(@class, "gunit_specs-table_row")]/div[3]/text()').get()
-
-            if optics_zoom_data:
-                optics_driver_zoom = clean_text(optics_zoom_data.strip())
-
-            # Optical device for Gunner、Commander and Driver
-
-            optics_device_data = response.xpath(
-
-                '//div[contains(@class, "form-text mb-1") and contains(text(), "Optical device")]/following-sibling::div[contains(@class, "gunit_specs-table_row")]/div[1]//button/span/text()').get()
-
-            if optics_device_data:
-                optics_gunner_device = clean_text(optics_device_data.strip())
-
-            optics_device_data = response.xpath(
-
-                '//div[contains(@class, "form-text mb-1") and contains(text(), "Optical device")]/following-sibling::div[contains(@class, "gunit_specs-table_row")]/div[2]//button/span/text()').get()
-
-            if optics_device_data:
-                optics_commander_device = clean_text(optics_device_data.strip())
-
-            optics_device_data = response.xpath(
-
-                '//div[contains(@class, "form-text mb-1") and contains(text(), "Optical device")]/following-sibling::div[contains(@class, "gunit_specs-table_row")]/div[3]//button/span/text()').get()
-
-            if optics_device_data:
-                optics_driver_device = clean_text(optics_device_data.strip())
-
-            # store data to item
-
-            item['power_to_weight_ratio'] = clean_text(power_to_weight_ratio if power_to_weight_ratio else 'Unknown')
-
-            item['engine_power'] = clean_text(engine_power if engine_power else 'Unknown')
-
-            item['weight'] = clean_text(weight if weight else 'Unknown')
-
-            item['armor_hull'] = clean_text(armour_hull if armour_hull else 'Unknown')
-
-            item['armor_turret'] = clean_text(armour_turret if armour_turret else 'Unknown')
-
-            item['visibility'] = clean_text(visibility if visibility else 'Unknown')
-
-            item['crew'] = clean_text(crew if crew else 'Unknown')
-
-            item['max_speed_forward'] = clean_text(max_speed_forward if max_speed_forward else 'Unknown')
-
-            item['max_speed_backward'] = clean_text(max_speed_backward if max_speed_backward else 'Unknown')
-
-            item['optics_gunner_zoom'] = clean_text(optics_gunner_zoom if optics_gunner_zoom else '—')
-
-            item['optics_commander_zoom'] = clean_text(optics_commander_zoom if optics_commander_zoom else '—')
-
-            item['optics_driver_zoom'] = clean_text(optics_driver_zoom if optics_driver_zoom else '—')
-
-            item['optics_gunner_device'] = clean_text(optics_gunner_device if optics_gunner_device else '—')
-
-            item['optics_commander_device'] = clean_text(optics_commander_device if optics_commander_device else '—')
-
-            item['optics_driver_device'] = clean_text(optics_driver_device if optics_driver_device else '—')
-
-            # save to database
-
-            self.save_to_db(item)
-
-            return item
 
         elif category == 'helicopters':
 
             # Extract detailed data from helicopter vehicles
 
-            item['max_speed'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]/text()'
-            ).get() else 'Unknown')
+            # Max speed
+            item['max_speed'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
+            ) else 'Unknown'
 
-            item['at_height'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[1]//span[1]/text()'
-            ).get().strip().replace(',', '') if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[1]//span[1]/text()'
-            ).get() else 'Unknown')
+            # at_height (带数值清理)
+            item['at_height'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[1]/span[1]'
+                )[0].text.strip().replace(',', '')
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[1]/span[1]'
+            ) else 'Unknown'
 
             # Rate of Climb
-            item['rate_of_climb'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Rate of Climb")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Rate of Climb")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]/text()'
-            ).get() else 'Unknown')
+            item['rate_of_climb'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Rate of Climb")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Rate of Climb")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
+            ) else 'Unknown'
 
             # Max altitude
-            item['max_altitude'] = clean_text(response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max altitude")]/span[@class="game-unit_chars-value"]/text()'
-            ).get().strip() if response.xpath(
-                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max altitude")]/span[@class="game-unit_chars-value"]/text()'
-            ).get() else 'Unknown')
+            item['max_altitude'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-line") and contains(., "Max altitude")]/span[@class="game-unit_chars-value"]'
+                )[0].text.strip()
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-line") and contains(., "Max altitude")]/span[@class="game-unit_chars-value"]'
+            ) else 'Unknown'
 
-            # Crew、Gross weight、Engine and Main rotor diameter
-            crew = None
-            gross_weight = None
-            engine = None
-            main_rotor_diameter = None
+            # 统一模板函数
+            def get_block_field(field_name: str, default='Unknown') -> str:
+                elements = self.driver.find_elements(
+                    By.XPATH,
+                    f'//div[contains(@class, "game-unit_chars-block")]/div/span[contains(text(), "{field_name}")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+                )
+                return clean_text(elements[0].text.strip()) if elements else default
 
-            crew_data = response.xpath(
-                '//div[contains(@class, "game-unit_chars-block")]/div/span[contains(text(), "Crew")]/following-sibling::span[contains(@class, "game-unit_chars-value")]/text()').get()
-            if crew_data:
-                crew = clean_text(crew_data.strip())
+            # Crew
+            item['crew'] = get_block_field("Crew")
 
-            gross_weight_data = response.xpath(
-                '//div[contains(@class, "game-unit_chars-block")]/div/span[contains(text(), "Gross weight")]/following-sibling::span[contains(@class, "game-unit_chars-value")]/text()').get()
-            if gross_weight_data:
-                gross_weight = clean_text(gross_weight_data.strip())
+            # Gross weight (带千分位清理)
+            item['gross_weight'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-block")]/div/span[contains(text(), "Gross weight")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+                )[0].text.strip().replace(',', '')
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-block")]/div/span[contains(text(), "Gross weight")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+            ) else 'Unknown'
 
-            engine_data = response.xpath(
-                '//div[contains(@class, "game-unit_chars-block")]/div/span[contains(text(), "Engine")]/following-sibling::span[contains(@class, "game-unit_chars-value")]/text()').get()
-            if engine_data:
-                engine = clean_text(engine_data.strip())
+            # Engine
+            item['engine'] = get_block_field("Engine")
 
-            main_rotor_diameter_data = response.xpath(
-                '//div[contains(@class, "game-unit_chars-block")]/div/span[contains(text(), "Main rotor diameter")]/following-sibling::span[contains(@class, "game-unit_chars-value")]/text()').get()
-            if main_rotor_diameter_data:
-                main_rotor_diameter = clean_text(main_rotor_diameter_data.strip())
-
-            # store to item
-            item['crew'] = clean_text(crew if crew else 'Unknown')
-            item['gross_weight'] = clean_text(gross_weight if gross_weight else 'Unknown')
-            item['engine'] = clean_text(engine if engine else 'Unknown')
-            item['main_rotor_diameter'] = clean_text(main_rotor_diameter if main_rotor_diameter else 'Unknown')
+            # Main rotor diameter (带单位清理)
+            item['main_rotor_diameter'] = clean_text(
+                self.driver.find_elements(
+                    By.XPATH,
+                    '//div[contains(@class, "game-unit_chars-block")]/div/span[contains(text(), "Main rotor diameter")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+                )[0].text.strip().split()[0]
+            ) if self.driver.find_elements(
+                By.XPATH,
+                '//div[contains(@class, "game-unit_chars-block")]/div/span[contains(text(), "Main rotor diameter")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
+            ) else 'Unknown'
 
         pass
         # save to db
-        self.save_to_db(item)
+        # self.save_to_db(item, category)
 
         return item
 
-    def save_to_db(self, item):
+    def save_to_db(self, item, category):
         """
         Inserts the scraped data for each vehicle into the MySQL database.
         """
-        category = item.get('category', 'unknown').lower()
-        table_name = category if category else 'unknown'
+        table_name = category.lower()
 
         # Clean up field values, remove units (e.g. "1.5T" to 1.5)
         def clean_number(value):
@@ -546,9 +623,6 @@ class VehiclesSpider(scrapy.Spider):
             if isinstance(value, str):
                 return ''.join(c for c in value if c.isdigit())
             return value
-
-        if 'category' in item:
-            del item['category']  # Delete the 'category' field
 
         # Dynamically build the fields and values of SQL queries
         def build_values(item, category):
