@@ -91,7 +91,7 @@ class VehiclesSpider(scrapy.Spider):
                     self.logger.info(f" find {len(vehicle_links)} vehicle link")
 
                     # Handle each vehicle link
-                    for link in vehicle_links[:1]:  # Limit the number when testing
+                    for link in vehicle_links:  # Limit the number when testing
                         vehicle_url = link.get_attribute('href')
                         if vehicle_url:
                             self.logger.debug(f" Extract to link: {vehicle_url}")
@@ -612,11 +612,34 @@ class VehiclesSpider(scrapy.Spider):
 
         # Clean up field values, remove units (e.g. "1.5T" to 1.5)
         def clean_number(value):
+            if value is None:
+                return None
 
             if isinstance(value, str):
-                # Keep only numbers and decimal points
-                return ''.join(c for c in value if c.isdigit() or c == '.')
-            return value
+                # Remove Spaces and invisible characters before and after
+                cleaned = value.strip()
+                # Remove unit symbols and redundant characters (e.g. km/h, %, etc.)
+                cleaned = re.sub(r'[^\d.]+', '', cleaned)
+                if not cleaned:  # handle empty string
+                    return None
+
+                # change data type
+                try:
+                    # Convert to floating point and keep 1 decimal place
+                    num = round(float(cleaned), 1)
+                    # Validate numeric ranges (example ranges, adjusted based on actual field definitions)
+                    if not (-999.9 <= num <= 999.9):
+                        print(f"value is out of range: {num}，set to empty")
+                        return None
+                    return num
+                except (ValueError, TypeError):
+                    return None
+
+                # Process existing numeric types
+            elif isinstance(value, (int, float)):
+                return round(float(value), 1)
+
+                return None
 
         # Clean the crew field and keep the numbers
         def clean_crew(value):
