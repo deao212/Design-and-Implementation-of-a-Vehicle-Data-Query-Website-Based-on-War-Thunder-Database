@@ -1,5 +1,5 @@
 import traceback
-from selenium.common import TimeoutException, NoSuchElementException, StaleElementReferenceException
+from selenium.common import TimeoutException, NoSuchElementException
 from warthunder.items import WarThunderItem
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -26,8 +26,8 @@ class VehiclesSpider(scrapy.Spider):
         edge_options.add_argument("--disable-blink-features=AutomationControlled")
         edge_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         prefs = {
-            "profile.managed_default_content_settings.images": 2,  # 禁用图片
-            "profile.managed_default_content_settings.stylesheet": 2  # 禁用 CSS
+            "profile.managed_default_content_settings.images": 2,
+            "profile.managed_default_content_settings.stylesheet": 2
         }
         edge_options.add_experimental_option("prefs", prefs)
         #  Set the Edge WebDriver path
@@ -118,17 +118,17 @@ class VehiclesSpider(scrapy.Spider):
 
         category = response.meta['category']  # Get vehicle categories (aviation, ground, helicopters)
         self.logger.info(f"Parsing vehicle details in category {category}: {response.url}")
-        # 使用 Selenium 加载页面（确保动态内容渲染）
+        # use Selenium load page
         self.driver.get(response.url)
         item = WarThunderItem()
 
-        # 显式等待核心容器加载（所有页面通用）
+        # wait for the core container to load
         try:
             WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div.game-unit_name"))
             )
         except TimeoutException:
-            self.logger.error(f"核心容器未加载: {response.url}")
+            self.logger.error(f"core container not loaded: {response.url}")
             self.driver.save_screenshot("core_container_timeout.png")
             return item
 
@@ -136,12 +136,12 @@ class VehiclesSpider(scrapy.Spider):
             if not text:
                 return 'Unknown' if not is_numeric else '0'
 
-            # 保留数字、小数点和单位（如 "5.7 km/h" → "5.7"）
+            # Retain numbers, decimal points and units
             if is_numeric:
                 cleaned = re.sub(r'[^\d.]', '', text)
                 return cleaned if cleaned else '0'
 
-            # 移除控制字符但保留可见符号
+            # Remove the control characters
             return re.sub(r'[\x00-\x1F\x7F-\x9F]', '', text).strip()
 
         def safe_find_text(xpath, is_numeric=False, default='Unknown'):
@@ -178,7 +178,7 @@ class VehiclesSpider(scrapy.Spider):
             ).text.strip() or 'Unknown'
         )
 
-        # AB 字段
+        # AB
         item['AB'] = clean_text(
             self.driver.find_element(
                 By.XPATH,
@@ -189,7 +189,7 @@ class VehiclesSpider(scrapy.Spider):
             ) else 'Unknown'
         )
 
-        # RB 字段
+        # RB
         item['RB'] = clean_text(
             self.driver.find_element(
                 By.XPATH,
@@ -200,7 +200,7 @@ class VehiclesSpider(scrapy.Spider):
             ) else 'Unknown'
         )
 
-        # SB 字段
+        # SB
         item['SB'] = clean_text(
             self.driver.find_element(
                 By.XPATH,
@@ -211,7 +211,7 @@ class VehiclesSpider(scrapy.Spider):
             ) else 'Unknown'
         )
 
-        # Research 字段
+        # Research
         item['research'] = clean_text(
             self.driver.find_elements(
                 By.XPATH,
@@ -222,7 +222,7 @@ class VehiclesSpider(scrapy.Spider):
             ) else '0'
         )
 
-        # Purchase 字段
+        # Purchase
         item['purchase'] = clean_text(
             self.driver.find_elements(
                 By.XPATH,
@@ -236,7 +236,8 @@ class VehiclesSpider(scrapy.Spider):
         # Extract different data based on the page type
         if category == 'aviation':
             # Extract detailed data for aviation (aircraft) vehicles
-            # Max speed 字段
+
+            # Max speed
             item['max_speed'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -247,7 +248,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
             ) else 'Unknown'
 
-            # at_height 字段（优化了位置索引）
+            # at_height
             item['at_height'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -258,7 +259,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[1]/span[1]'
             ) else 'Unknown'
 
-            # Rate of Climb 字段
+            # Rate of Climb
             item['rate_of_climb'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -269,7 +270,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Rate of Climb")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
             ) else 'Unknown'
 
-            # Turn time 字段
+            # Turn time
             item['turn_time'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -280,7 +281,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Turn time")]/span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
             ) else 'Unknown'
 
-            # Max altitude 字段
+            # Max altitude
             item['max_altitude'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -291,7 +292,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Max altitude")]/span[@class="game-unit_chars-value"]'
             ) else 'Unknown'
 
-            # Takeoff Run 字段
+            # Takeoff Run
             item['takeoff_run'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -302,7 +303,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Takeoff Run")]/span[@class="game-unit_chars-value"]'
             ) else 'Unknown'
 
-            # Crew 字段
+            # Crew
             item['crew'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -313,7 +314,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Crew")]/span[@class="game-unit_chars-value"]'
             ) else 'Unknown'
 
-            # Length 字段
+            # Length
             item['length'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -324,7 +325,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Length")]/span[@class="game-unit_chars-value"]'
             ) else 'Unknown'
 
-            # Gross weight 字段
+            # Gross weight
             item['gross_weight'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -335,7 +336,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Gross weight")]/span[@class="game-unit_chars-value"]'
             ) else 'Unknown'
 
-            # Wingspan 字段
+            # Wingspan
             item['wingspan'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -346,7 +347,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Wingspan")]/span[@class="game-unit_chars-value"]'
             ) else 'Unknown'
 
-            # Engine 字段
+            # Engine
             item['engine'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -357,7 +358,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Engine")]/span[@class="game-unit_chars-value"]'
             ) else 'Unknown'
 
-            # Max Speed Limit (IAS) 字段（带 split 处理）
+            # Max Speed Limit (IAS)
             item['max_speed_limit_ias'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -368,7 +369,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Max Speed Limit (IAS)")]/span[@class="game-unit_chars-value"]'
             ) else 'Unknown'
 
-            # Flap Speed Limit (IAS) 字段（带 split 处理）
+            # Flap Speed Limit (IAS)
             item['flap_speed_limit_ias'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -379,7 +380,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Flap Speed Limit (IAS)")]/span[@class="game-unit_chars-value"]'
             ) else 'Unknown'
 
-            # Mach Number Limit 字段（带 split 处理）
+            # Mach Number Limit
             item['mach_number_limit'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -425,7 +426,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Visibility")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
             ) else 'Unknown'
 
-            # Crew (坦克乘员)
+            # Crew
             item['crew'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -436,7 +437,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Crew")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
             ) else 'Unknown'
 
-            # Max speed forward (带单位分割)
+            # Max speed forward
             item['max_speed_forward'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -447,7 +448,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Forward")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb")]'
             ) else 'Unknown'
 
-            # Max speed backward (带单位分割)
+            # Max speed backward
             item['max_speed_backward'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -458,7 +459,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Backward")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span'
             ) else 'Unknown'
 
-            # Power-to-weight ratio (带千分位处理)
+            # Power-to-weight ratio
             item['power_to_weight_ratio'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -469,7 +470,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line")]/span[contains(text(), "Power-to-weight ratio")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb-mod-ref")]'
             ) else 'Unknown'
 
-            # Engine power (带千分位处理)
+            # Engine power
             item['engine_power'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -480,7 +481,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Engine power")]/following-sibling::span[contains(@class, "game-unit_chars-value")]//span[contains(@class, "show-char-rb-mod-ref")]'
             ) else 'Unknown'
 
-            # Weight (带千分位处理)
+            # Weight
             item['weight'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -491,7 +492,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-subline")]/span[contains(text(), "Weight")]/following-sibling::span[contains(@class, "game-unit_chars-value")]'
             ) else 'Unknown'
 
-            # 光学参数统一模板
+
             def get_optics_field(path_suffix: str, index: int, processor=None):
                 elements = self.driver.find_elements(
                     By.XPATH,
@@ -502,12 +503,12 @@ class VehiclesSpider(scrapy.Spider):
                 text = elements[0].text.strip()
                 return clean_text(processor(text)) if processor else clean_text(text)
 
-            # 光学倍率
+            # Optics zoom
             item['optics_gunner_zoom'] = get_optics_field("Optics zoom", 1)
             item['optics_commander_zoom'] = get_optics_field("Optics zoom", 2)
             item['optics_driver_zoom'] = get_optics_field("Optics zoom", 3)
 
-            # 光学设备
+            # Optical device
             item['optics_gunner_device'] = get_optics_field("Optical device", 1, lambda x: x.split('\n')[0])
             item['optics_commander_device'] = get_optics_field("Optical device", 2, lambda x: x.split('\n')[0])
             item['optics_driver_device'] = get_optics_field("Optical device", 3, lambda x: x.split('\n')[0])
@@ -529,7 +530,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Max speed")]/following-sibling::div[contains(@class, "game-unit_chars-subline")]//span[@class="game-unit_chars-value"]/span[@class="show-char-rb-mod-ref"]'
             ) else 'Unknown'
 
-            # at_height (带数值清理)
+            # at_height
             item['at_height'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -562,7 +563,7 @@ class VehiclesSpider(scrapy.Spider):
                 '//div[contains(@class, "game-unit_chars-line") and contains(., "Max altitude")]/span[@class="game-unit_chars-value"]'
             ) else 'Unknown'
 
-            # 统一模板函数
+
             def get_block_field(field_name: str, default='Unknown') -> str:
                 elements = self.driver.find_elements(
                     By.XPATH,
@@ -573,7 +574,7 @@ class VehiclesSpider(scrapy.Spider):
             # Crew
             item['crew'] = get_block_field("Crew")
 
-            # Gross weight (带千分位清理)
+            # Gross weight
             item['gross_weight'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -587,7 +588,7 @@ class VehiclesSpider(scrapy.Spider):
             # Engine
             item['engine'] = get_block_field("Engine")
 
-            # Main rotor diameter (带单位清理)
+            # Main rotor diameter
             item['main_rotor_diameter'] = clean_text(
                 self.driver.find_elements(
                     By.XPATH,
@@ -600,7 +601,7 @@ class VehiclesSpider(scrapy.Spider):
 
         pass
         # save to db
-        # self.save_to_db(item, category)
+        self.save_to_db(item, category)
 
         return item
 

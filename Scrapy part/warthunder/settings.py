@@ -91,8 +91,8 @@ ITEM_PIPELINES = {
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
-MYSQL_HOST = 'localhost'  # 数据库地址
-MYSQL_DATABASE = 'warthunder_vehicle_data'  # 你的数据库名称
-MYSQL_USER = 'root'  # 数据库用户名
-MYSQL_PASSWORD = '123456'  # 数据库密码
-MYSQL_PORT = 3306  # MySQL 端口号，默认为 3306
+MYSQL_HOST = 'localhost'
+MYSQL_DATABASE = 'warthunder_vehicle_data'
+MYSQL_USER = 'root'
+MYSQL_PASSWORD = '123456'
+MYSQL_PORT = 3306

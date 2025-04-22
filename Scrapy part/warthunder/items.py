@@ -7,7 +7,7 @@ import scrapy
 
 
 class WarThunderItem(scrapy.Item):
-    # 定义项字段
+    # Define item field
     AB = scrapy.Field()
     RB = scrapy.Field()
     SB = scrapy.Field()
@@ -40,16 +40,10 @@ class WarThunderItem(scrapy.Item):
     optics_commander_device = scrapy.Field()
     optics_driver_zoom = scrapy.Field()
     optics_driver_device = scrapy.Field()
-    # support_systems = scrapy.Field()
-    # armament = scrapy.Field()
     max_speed_forward = scrapy.Field()
     max_speed_backward = scrapy.Field()
     power_to_weight_ratio = scrapy.Field()
     engine_power = scrapy.Field()
     weight = scrapy.Field()
     main_rotor_diameter = scrapy.Field()
-    # offensive_armament = scrapy.Field()
-    # defensive_armament = scrapy.Field()
-    # suspended_armament = scrapy.Field()
-
     category = scrapy.Field()

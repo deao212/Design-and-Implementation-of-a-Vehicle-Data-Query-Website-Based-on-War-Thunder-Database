@@ -5,7 +5,7 @@
 
 
 # useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
+
 
 import mysql.connector
 
@@ -30,7 +30,7 @@ class WarthunderPipeline:
         )
 
     def open_spider(self, spider):
-        """连接数据库"""
+        """connect to database"""
         self.conn = mysql.connector.connect(
             host=self.mysql_host,
             database=self.mysql_database,
@@ -41,20 +41,20 @@ class WarthunderPipeline:
         self.cursor = self.conn.cursor()
 
     def close_spider(self, spider):
-        """关闭数据库连接"""
+        """close database connection"""
         if self.cursor:
             self.cursor.close()
         if self.conn:
             self.conn.close()
 
     def process_item(self, item, spider):
-        # 从 item 中安全取出并删除 'category' 字段
+        # remove 'category'
         category = item.pop('category', None)
         if not category:
             spider.logger.error("Category not found in item")
             return item
 
-        """处理每一个爬取到的 item"""
+        """handle item"""
         table_name = ''
         if item['category'] == 'aviation':
             table_name = 'aviations'
@@ -63,7 +63,6 @@ class WarthunderPipeline:
         elif item['category'] == 'helicopters':
             table_name = 'helicopters'
 
-        # 构建插入 SQL 语句
         sql = f"""
             INSERT INTO {table_name} 
             (name, nation, rank, AB, RB, SB, purchase, research, main_role, 
@@ -72,7 +71,7 @@ class WarthunderPipeline:
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
-        # 插入的值
+        # value for insert
         values = (
             item['name'],
             item['nation'],
